@@ -76,7 +76,7 @@ body.addEventListener('click', (event) => {
                                         <p>DeathDay: ${item.deathDay}</p>
                                         <p>Status: ${item.status}</p>
                                         <p>Actors: ${item.actors}</p>
-                                        </div>`.replace(/undefined/, 'unknown');
+                                        </div>`.replace(/undefined/g, 'unknown');
                     popup.insertAdjacentElement('beforeend', popupDiv);
                 }
             });
