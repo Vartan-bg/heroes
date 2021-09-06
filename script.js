@@ -4,6 +4,7 @@ const form = document.getElementsByTagName('form')[0];
 const popup = document.querySelector('.popup');
 const body = document.getElementsByTagName('body')[0];
 
+//получение информации из файла json
 const getData = () => {
     return new Promise((resolve, reject) => {
         const request = new XMLHttpRequest();
@@ -21,97 +22,103 @@ const getData = () => {
             }
         });
         request.send();
-           
+
     });
 };
 
-const postHero = (data) => {
-    mainDoc.innerHTML = "";
-    data.forEach((item) => {
-        if (item.movies && item.movies.some(elem => elem.trim()===input.value.trim())) {
-            let newHero = document.createElement('button');
-            newHero.setAttribute('class', 'hero-card');
-            newHero.innerHTML = `<img class="hero-pic" src=${item.photo} alt="${item.name}">
-                                <div class='hero-info'>
-                                Имя: ${item.name}
-                                </div>`;
-            return mainDoc.insertAdjacentElement('beforeend', newHero);
-        }
-    });
-};
-    
 const postError = (e) => {
     console.log(e);
 };
 
-input.addEventListener('blur', () => {
-    getData().then(postHero).catch(postError);
-});
-
-const createDataList = (data) => {
-    if (input.nextElementSibling && input.nextElementSibling.getAttribute('id') === 'movies') {
-        return;
-    } else {
-        const dataList = document.createElement('datalist');
-        dataList.setAttribute('id', 'movies');
-        input.setAttribute('list', 'movies');
-        form.insertAdjacentElement('beforeend', dataList);
+//Создание карточек героев при событии на инпуте
+input.addEventListener('change', () => {
+    getData()
+    .then((data) => {
+        mainDoc.innerHTML = "";
         data.forEach((item) => {
-            if (item.movies) {
-                item.movies.forEach((elem) => {
-                    let option = document.createElement('option');
-                    option.setAttribute('value', elem.trim());
-                    dataList.insertAdjacentElement('beforeend', option);
-                });
-                
+            if (item.movies && item.movies.some(elem => elem.trim() === input.value.trim())) {
+                let newHero = document.createElement('button');
+                newHero.setAttribute('class', 'hero-card');
+                newHero.innerHTML = `<img class="hero-pic" src=${item.photo} alt="${item.name}">
+                                    <div class='hero-info'>
+                                    ${item.name}
+                                    </div>`;
+                return mainDoc.insertAdjacentElement('beforeend', newHero);
             }
         });
-        let arr = [...document.getElementsByTagName('option')];
-        for (let a = arr.length-1; a >= 0; a--) {
-            if (arr[a].value) {
-                for (let i = a-1; i >=0; i--) {
-                    if ((arr[i].value!==undefined) && (arr[a].value === arr[i].value)) {
-                        arr[i].removeAttribute('value');
-                    }
-                }
-            }
-        }
-    }
-};
+    })
+    .catch(postError);
+});
+
+//Создание popup окни с информацией о герое
 body.addEventListener('click', (event) => {
     let target = event.target;
-    console.log(target);
+    //событие срабатывает при нажатии на карточку героя
     if (target.closest('.hero-card')) {
-        popup.style.display = 'block';
-        const createPopup = (data) => {
+        popup.style.display = 'flex';
+        getData()
+        .then((data) => {
+            //создание пустого popup
             popup.innerHTML = '';
             data.forEach((item) => {
+                //если у таргета есть изображение с героем, заполняем popup информацией
                 if (target.closest('.hero-card').childNodes[0].getAttribute('src') === item.photo) {
                     let popupDiv = document.createElement('div');
                     popupDiv.classList.add('popup-div');
                     popupDiv.innerHTML = `<image class = "popup-img" src="${item.photo}"></image>
                                         <div class="popup-info">
-                                        Name: ${item.name}<br>
-                                        RealName: ${item.realName}<br>
-                                        Species: ${item.species}<br>
-                                        Citizenship: ${item.citizenship}<br>
-                                        Gender: ${item.gender}<br>
-                                        BirthDay: ${item.birthDay}<br>
-                                        DeathDay: ${item.deathDay}<br>
-                                        Status: ${item.status}<br>
-                                        Actors: ${item.actors}
+                                        <p>Name: ${item.name}</p>
+                                        <p>RealName: ${item.realName}</p>
+                                        <p>Species: ${item.species}</p>
+                                        <p>Citizenship: ${item.citizenship}</p>
+                                        <p>Gender: ${item.gender}</p>
+                                        <p>BirthDay: ${item.birthDay}</p>
+                                        <p>DeathDay: ${item.deathDay}</p>
+                                        <p>Status: ${item.status}</p>
+                                        <p>Actors: ${item.actors}</p>
                                         </div>`.replace(/undefined/, 'unknown');
                     popup.insertAdjacentElement('beforeend', popupDiv);
                 }
             });
-        };
-        getData().then(createPopup).catch(postError);
+        })
+        .catch(postError);
+        //закрытие popup окна при нажатии в любой области экрана
     } else {
         popup.style.display = 'none';
     }
-
 });
 
+//создание тега datalist и тегов option с value, равным названиям фильмов 
 window.addEventListener('DOMContentLoaded', () => {
-    getData().then(createDataList).catch(postError);
+    getData()
+    .then((data) => {
+        //создание тега datalist и тегов option? добавление атрибута list для инпута
+        const dataList = document.createElement('datalist');
+        dataList.setAttribute('id', 'movies');
+        input.setAttribute('list', 'movies');
+        form.insertAdjacentElement('beforeend', dataList);
+            data.forEach((item) => {
+            //если у героя есть список фильмов
+                if (item.movies) {
+                    //название каждого фильма положить в value нового option
+                    item.movies.forEach((elem) => {
+                        let option = document.createElement('option');
+                        option.setAttribute('value', elem.trim());
+                        dataList.insertAdjacentElement('beforeend', option);
+                    });
+                }
+            });
+        //удаление всех повторяющихся тегов option
+        let arr = [...document.getElementsByTagName('option')];
+        for (let a = arr.length - 1; a >= 0; a--) {
+            if (arr[a].value) {
+                for (let i = a - 1; i >= 0; i--) {
+                    if ((arr[i].value !== undefined) && (arr[a].value === arr[i].value)) {
+                        arr[i].remove();
+                    }
+                }
+            }
+        }
+    })
+    .catch(postError);
 });
